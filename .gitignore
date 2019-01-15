@@ -63,3 +63,7 @@ typings/
 .next
 
 .idea
+
+# 个人配置（database、redis）
+privateConfig.js
+dump.rdb
