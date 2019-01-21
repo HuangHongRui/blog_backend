@@ -120,32 +120,42 @@ router.get('/account_send_email', (req, res, next) => {
 });
 
 /**
+ *  功能: 验证验证码
+ *  参数: vCode
+ **/
+router.get('/account_verify_code', (req, res, next) => {
+  let {email, vCode} = req.body;
+  redis_client.get( email + '_redis', (err, reply) => {
+    if (reply && reply === vCode) {
+        res.json({
+          state: 1,
+          message:  '验证成功'
+        });
+    } else {
+      res.json({
+        state: 0,
+        message: '验证码错误'
+      })
+    }
+  })
+});
+
+/**
  *  功能: 注册账号
  *  参数: nickname
  *  参数: email
  *  参数: password
  **/
 router.post('/account_sign_up', (req, res, next) => {
-  let {nickname, email, password, vCode} = req.body;
-  let message = !(nickname && email && password) ? "注册失败" : "验证码错误";
-
-  redis_client.get( email + '_redis', (err, reply) => {
-    if (reply && reply === vCode) {
-      dbMethods.query(dbMySqlMethods.sign_up,[nickname, email, password], function(err, result){
-        let stateVar = result && !err ? 1 : 0;
-        let messageVar = result && !err? '注册成功' : '注册失败';
-        res.json({
-          state: stateVar,
-          message:  messageVar
-        });
-      });
-    } else {
-      res.json({
-        state: 0,
-        message: message
-      })
-    }
-  })
+  let {nickname, email, password} = req.body;
+  dbMethods.query(dbMySqlMethods.sign_up,[nickname, email, password], function(err, result){
+    let stateVar = result && !err ? 1 : 0;
+    let messageVar = result && !err? '注册成功' : '注册失败';
+    res.json({
+      state: stateVar,
+      message:  messageVar
+    });
+  });
 });
 
 /**
