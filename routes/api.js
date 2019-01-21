@@ -2,7 +2,7 @@ let express = require('express');
 let redis = require('redis');
 let dbMethods = require('../database/dbMethods');
 let dbMySqlMethods = require('../database/dbMysqlMethods');
-let sendEmail = require('../src/email');
+let sendEmail = require('../util/email');
 let Methods = require('../util/methods');
 let redis_client = redis.createClient();
 let router = express.Router();
@@ -77,48 +77,14 @@ router.get('/del', (req, res, next) => {
   res.json({})
 });
 
-
-/**
- *  功能: 注册账号
- *  参数: nickname
- *  参数: email
- *  参数: password
- **/
-router.get('/register', (req, res, next) => {
-  let {nickname, email, password} = req.query;
-  dbMethods.query(dbMySqlMethods.register,[nickname, email, password], function(result, fields){
-    res.json({
-      state: 1,
-      message:  "注册成功"
-    })
-  });
-});
-
-/**
- *  功能: 登录账号
- *  参数: account
- *  参数: password
- **/
-router.get('/login', (req, res, next) => {
-  let {account, password} = req.query;
-  dbMethods.query(dbMySqlMethods.login,[account, account, password], function(result){
-    let stateVar = result.length ? 1 : 0;
-    let messageVar = result.length ? '登录成功。' : '登录失败，账号或密码错误。';
-    res.json({
-      state: stateVar,
-      message: messageVar,
-    })
-  });
-});
-
 /**
  *  功能: 验证邮箱
  *  参数: email
  *  简介: 用于注册时/找密时的验证
  */
-router.get('/verifyEmail', (req, res, next) => {
+router.get('/account_verify_email', (req, res, next) => {
   let {email} = req.query;
-  dbMethods.query(dbMySqlMethods.verifyEmail, [email], function(result){
+  dbMethods.query(dbMySqlMethods.verifyEmail, [email], function(err, result){
     let stateVar = result.length ? 1 : 0;
     let messageVar = result.length ? '邮箱已注册' : '邮箱未注册';
     res.json({
@@ -128,26 +94,22 @@ router.get('/verifyEmail', (req, res, next) => {
   });
 });
 
-
 /**
  *  功能: 发送邮件_注册验证码
  **/
-router.get('/sendEmail', (req, res, next) => {
+router.get('/account_send_email', (req, res, next) => {
   let {email} = req.query;
-
   redis_client.get( email + '_redis', (err, reply) => {
-    if (reply) {
-      console.log("☞☞☞ 9527 api 141", reply);
+    if (email && reply) {
     //  如果有那么不发邮件了...
       res.json({
         state: 0,
-        message: '间隔1分钟才可以发送新验证码。'
+        message: '验证码有效期5分钟，请5分钟后再试'
       })
     } else {
       let vCode = Methods.generateCode(6);
-      redis_client.set( email + '_redis', vCode, 'EX', 60, 'NX');
+      redis_client.set( email + '_redis', vCode, 'EX', 300, 'NX');
       sendEmail({email_tag: email, vCode: vCode}, (result, txt) => {
-        console.log("☞☞☞ 9527 api 153", 11111111);
         res.json({
           state: result,
           message: txt
@@ -155,11 +117,56 @@ router.get('/sendEmail', (req, res, next) => {
       });
     }
   });
+});
 
+/**
+ *  功能: 注册账号
+ *  参数: nickname
+ *  参数: email
+ *  参数: password
+ **/
+router.post('/account_sign_up', (req, res, next) => {
+  let {nickname, email, password, vCode} = req.body;
+  let message = !(nickname && email && password) ? "注册失败" : "验证码错误";
+
+  redis_client.get( email + '_redis', (err, reply) => {
+    if (reply && reply === vCode) {
+      dbMethods.query(dbMySqlMethods.sign_up,[nickname, email, password], function(err, result){
+        let stateVar = result && !err ? 1 : 0;
+        let messageVar = result && !err? '注册成功' : '注册失败';
+        res.json({
+          state: stateVar,
+          message:  messageVar
+        });
+      });
+    } else {
+      res.json({
+        state: 0,
+        message: message
+      })
+    }
+  })
+});
+
+/**
+ *  功能: 登录账号
+ *  参数: account
+ *  参数: password
+ **/
+router.post('/account_sign_in', (req, res, next) => {
+  let {email, password} = req.body;
+  dbMethods.query(dbMySqlMethods.login,[email, password], function(err, result){
+    let stateVar = result.length ? 1 : 0;
+    let messageVar = result.length ? '登录成功。' : '登录失败，账号或密码错误。';
+    res.json({
+      state: stateVar,
+      message: messageVar,
+    })
+  });
 });
 
 router.get('/forget', (req, res, next) => {
-  dbMethods.query(dbMySqlMethods.createTable,undefined, function(result, fields){
+  dbMethods.query(dbMySqlMethods.createTable,undefined, function(err, result){
     console.log('查询结果：', result);
   });
 });
