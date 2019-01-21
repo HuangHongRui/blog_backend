@@ -108,6 +108,7 @@ router.get('/account_send_email', (req, res, next) => {
       })
     } else {
       let vCode = Methods.generateCode(6);
+      console.log("☞☞☞ 9527 api 111", vCode);
       redis_client.set( email + '_redis', vCode, 'EX', 300, 'NX');
       sendEmail({email_tag: email, vCode: vCode}, (result, txt) => {
         res.json({
@@ -124,8 +125,8 @@ router.get('/account_send_email', (req, res, next) => {
  *  参数: vCode
  **/
 router.get('/account_verify_code', (req, res, next) => {
-  let {email, vCode} = req.body;
-  redis_client.get( email + '_redis', (err, reply) => {
+  let {email, vCode} = req.query;
+  redis_client.get( email + '_redis', function(err, reply) {
     if (reply && reply === vCode) {
         res.json({
           state: 1,
