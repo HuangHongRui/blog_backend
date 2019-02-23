@@ -14,9 +14,9 @@ module.exports = {
     return resultCode;
   },
 
-  generateResult: function(state, message) {
+  generateResult: function(status, message) {
     return {
-      state: state,
+      status: status,
       message: message
     }
   }

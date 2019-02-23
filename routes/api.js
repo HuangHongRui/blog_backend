@@ -14,7 +14,7 @@ router.get("/online", function (req, res, next) {
   res.status(200);
   res.type("application/json");
   res.json({
-    state: `1`,
+    status: 1,
     message: "当前在线人数",
     online: `${req.online.length}`
   });
@@ -27,7 +27,7 @@ router.get("/runtime", (req, res, next) => {
   res.status(200);
   res.type("application/json");
   res.json({
-    state: 1,
+    status: 1,
     message: "运行历史时间",
     unit: "毫秒",
     runtime: Date.parse(new Date()) - Date.parse(new Date("2018-05-01T09:06:07"))
@@ -59,13 +59,11 @@ router.get("/del", (req, res, next) => {
  */
 router.get("/account_verify_email", (req, res, next) => {
   let {email} = req.query;
+  let resultData = Methods.generateResult(0, "邮箱未注册");
   dbMethods.query(dbMySqlMethods.verifyEmail, [email], function (err, result) {
-    let stateVar = result.length ? 1 : 0;
-    let messageVar = result.length ? "邮箱已注册" : "邮箱未注册";
-    res.json({
-      state: stateVar,
-      message: messageVar,
-    });
+    if (result.length)
+      resultData = Methods.generateResult(1, "邮箱已注册");
+    res.json(resultData);
   });
 });
 
@@ -74,21 +72,16 @@ router.get("/account_verify_email", (req, res, next) => {
  **/
 router.get("/account_send_email", (req, res, next) => {
   let {email} = req.query;
+  let resultData = Methods.generateResult(0, "验证码有效期5分钟，请5分钟后再试");
   redis_client.get(email + "_redis", (err, reply) => {
     if (email && reply) {
       //  如果有那么不发邮件了...
-      res.json({
-        state: 0,
-        message: "验证码有效期5分钟，请5分钟后再试"
-      });
+      res.json(resultData);
     } else {
       let vCode = Methods.generateCode(6);
       redis_client.set(email + "_redis", vCode, "EX", 300, "NX");
       sendEmail({email_tag: email, vCode: vCode}, (result, txt) => {
-        res.json({
-          state: result,
-          message: txt
-        });
+        res.json({ status: result, message: txt });
       });
     }
   });
