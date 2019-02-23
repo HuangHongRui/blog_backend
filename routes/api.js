@@ -1,80 +1,55 @@
-let express = require('express');
-let redis = require('redis');
-let dbMethods = require('../database/dbMethods');
-let dbMySqlMethods = require('../database/dbMysqlMethods');
-let sendEmail = require('../util/email');
-let Methods = require('../util/methods');
+let express = require("express");
+let redis = require("redis");
+let dbMethods = require("../database/dbMethods");
+let dbMySqlMethods = require("../database/dbMysqlMethods");
+let sendEmail = require("../util/email");
+let Methods = require("../util/methods");
 let redis_client = redis.createClient();
 let router = express.Router();
-let app = express();
 
-/*
- |--------------------------------------------------------------------------
- | 在线人数
- |--------------------------------------------------------------------------
+/**
+ *  功能: 在线人数
  */
-app.use(function (req, res, next) {
-  var ua = req.headers['user-agent'];
-  redis_client.zadd('online', Date.now(), ua, next);
-});
-
-app.use(function (req, res, next) {
-  var min = 60 * 1000;
-  var ago = Date.now() - min;
-  redis_client.zrevrangebyscore('online', '+inf', ago, function (err, users) {
-    if (err) return next(err);
-    req.online = users;
-    next();
-  });
-});
-
-router.get('/online', function (req, res, next) {
+router.get("/online", function (req, res, next) {
   res.status(200);
-  res.type('application/json');
+  res.type("application/json");
   res.json({
     state: `1`,
-    message: '当前在线人数',
+    message: "当前在线人数",
     online: `${req.online.length}`
   });
 });
 
-/*
- |--------------------------------------------------------------------------
- | 运行历史时间
- |--------------------------------------------------------------------------
+/**
+ *  功能: 运行历史时间
  */
-router.get('/runtime', (req, res, next) => {
+router.get("/runtime", (req, res, next) => {
   res.status(200);
-  res.type('application/json');
+  res.type("application/json");
   res.json({
     state: 1,
-    message: '运行历史时间',
-    unit: '毫秒',
-    runtime: Date.parse(new Date()) - Date.parse(new Date('2018-05-01T09:06:07'))
-  })
+    message: "运行历史时间",
+    unit: "毫秒",
+    runtime: Date.parse(new Date()) - Date.parse(new Date("2018-05-01T09:06:07"))
+  });
 });
 
-router.get('/test', (req, res, next) => {
-  redis_client.set( 'redis-leo', '123', 'EX', 5, 'NX', (err, res) => {
-    console.log("☞☞☞ 9527 api 60", res);
+router.get("/test", (req, res, next) => {
+  redis_client.set("redis-leo", "123", "EX", 5, "NX", (err, res) => {
   });
-  res.json({})
+  res.json({});
 });
 
-router.get('/get', (req, res, next) => {
-  redis_client.get('hhr464362353@gmail.com_redis', function(err, res) {
-    console.log("☞☞☞ 9527 api 64", res);
-    if (res) console.log("☞☞☞ 9527 api 67", 'heihei');
+router.get("/get", (req, res, next) => {
+  redis_client.get("hhr464362353@gmail.com_redis", function (err, res) {
   });
-  res.json({})
+  res.json({});
 });
 
-router.get('/del', (req, res, next) => {
-  redis_client.del('hhr464362353@gmail.com_redis', function(err, res) {
-    console.log("☞☞☞ 9527 api 64", res);
-    if (res) console.log("☞☞☞ 9527 api 75", 'del Done');
+router.get("/del", (req, res, next) => {
+  redis_client.del("hhr464362353@gmail.com_redis", function (err, res) {
   });
-  res.json({})
+  res.json({});
 });
 
 /**
@@ -82,39 +57,38 @@ router.get('/del', (req, res, next) => {
  *  参数: email
  *  简介: 用于注册时/找密时的验证
  */
-router.get('/account_verify_email', (req, res, next) => {
+router.get("/account_verify_email", (req, res, next) => {
   let {email} = req.query;
-  dbMethods.query(dbMySqlMethods.verifyEmail, [email], function(err, result){
+  dbMethods.query(dbMySqlMethods.verifyEmail, [email], function (err, result) {
     let stateVar = result.length ? 1 : 0;
-    let messageVar = result.length ? '邮箱已注册' : '邮箱未注册';
+    let messageVar = result.length ? "邮箱已注册" : "邮箱未注册";
     res.json({
       state: stateVar,
       message: messageVar,
-    })
+    });
   });
 });
 
 /**
  *  功能: 发送邮件_注册验证码
  **/
-router.get('/account_send_email', (req, res, next) => {
+router.get("/account_send_email", (req, res, next) => {
   let {email} = req.query;
-  redis_client.get( email + '_redis', (err, reply) => {
+  redis_client.get(email + "_redis", (err, reply) => {
     if (email && reply) {
-    //  如果有那么不发邮件了...
+      //  如果有那么不发邮件了...
       res.json({
         state: 0,
-        message: '验证码有效期5分钟，请5分钟后再试'
-      })
+        message: "验证码有效期5分钟，请5分钟后再试"
+      });
     } else {
       let vCode = Methods.generateCode(6);
-      console.log("☞☞☞ 9527 api 111", vCode);
-      redis_client.set( email + '_redis', vCode, 'EX', 300, 'NX');
+      redis_client.set(email + "_redis", vCode, "EX", 300, "NX");
       sendEmail({email_tag: email, vCode: vCode}, (result, txt) => {
         res.json({
           state: result,
           message: txt
-        })
+        });
       });
     }
   });
@@ -124,21 +98,14 @@ router.get('/account_send_email', (req, res, next) => {
  *  功能: 验证验证码
  *  参数: vCode
  **/
-router.get('/account_verify_code', (req, res, next) => {
+router.get("/account_verify_code", (req, res, next) => {
   let {email, vCode} = req.query;
-  redis_client.get( email + '_redis', function(err, reply) {
-    if (reply && reply === vCode) {
-        res.json({
-          state: 1,
-          message:  '验证成功'
-        });
-    } else {
-      res.json({
-        state: 0,
-        message: '验证码错误'
-      })
-    }
-  })
+  let resultData = Methods.generateResult(0, "验证码错误");
+  redis_client.get(email + "_redis", function (err, reply) {
+    if (reply && reply === vCode)
+      resultData = Methods.generateResult(1, "验证成功");
+    res.json(resultData);
+  });
 });
 
 /**
@@ -147,15 +114,13 @@ router.get('/account_verify_code', (req, res, next) => {
  *  参数: email
  *  参数: password
  **/
-router.post('/account_sign_up', (req, res, next) => {
+router.post("/account_sign_up", (req, res, next) => {
   let {nickname, email, password} = req.body;
-  dbMethods.query(dbMySqlMethods.sign_up,[nickname, email, password], function(err, result){
-    let stateVar = result && !err ? 1 : 0;
-    let messageVar = result && !err? '注册成功' : '注册失败';
-    res.json({
-      state: stateVar,
-      message:  messageVar
-    });
+  let resultData = Methods.generateResult(0, "注册失败");
+  dbMethods.query(dbMySqlMethods.sign_up, [nickname, email, password], function (err, result) {
+    if (result && !err)
+      resultData = Methods.generateResult(1, "注册成功");
+    res.json(resultData);
   });
 });
 
@@ -164,21 +129,29 @@ router.post('/account_sign_up', (req, res, next) => {
  *  参数: account
  *  参数: password
  **/
-router.post('/account_sign_in', (req, res, next) => {
+router.post("/account_sign_in", (req, res, next) => {
   let {email, password} = req.body;
-  dbMethods.query(dbMySqlMethods.login,[email, password], function(err, result){
-    let stateVar = result.length ? 1 : 0;
-    let messageVar = result.length ? '登录成功。' : '登录失败，账号或密码错误。';
-    res.json({
-      state: stateVar,
-      message: messageVar,
-    })
+  let resultData = Methods.generateResult(0, "登录失败，账号或密码错误。");
+  dbMethods.query(dbMySqlMethods.login, [email, password], function (err, result) {
+    if (result.length) {
+      req.session.userName = req.sessionID;
+      resultData = Methods.generateResult(1, "登录成功");
+    }
+    res.json(resultData);
   });
 });
 
-router.get('/forget', (req, res, next) => {
-  dbMethods.query(dbMySqlMethods.createTable,undefined, function(err, result){
-    console.log('查询结果：', result);
+router.get("/account_is_login", (req, res) => {
+  let resultData = Methods.generateResult(0, "认证失败");
+  if (req.session.userName === req.sessionID) {
+    resultData = Methods.generateResult(1, "认证成功");
+  }
+  res.json(resultData);
+});
+
+router.get("/forget", (req, res, next) => {
+  dbMethods.query(dbMySqlMethods.createTable, undefined, function (err, result) {
+    console.log("查询结果：", result);
   });
 });
 
