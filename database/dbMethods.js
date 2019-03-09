@@ -8,17 +8,17 @@ module.exports = {
     pool.getConnection(function(err,connection){
       if(err){
         console.log('数据库链接失败', err);
-        // throw err;
+        throw err;
         return;
       }
-      connection.query( sql, valueAry, function(err,results,fields ){
+      connection.query( sql, valueAry, function(err,results ){
         connection.release();
         if(err){
           console.log('数据操作失败', err);
           // throw err;
-          return;
+          // return;
         }
-        callback && callback(results, fields);
+        callback && callback(err, results);
       });
     });
   }

@@ -10,12 +10,11 @@ const {emailConfig = {}} = require("../privateConfig");
  */
 function sendEmail(arg = {}, callback){
   const {
-    email_tag = '1125340925@qq.com',
-    vCode = '170117',
+    email_tag,
+    vCode = '0000',
     subject_txt = '注册验证码',
     // content_txt = '注册内容'
   } = arg;
-  console.log("☞☞☞ 9527 email 18", arg);
 
   let transporter = nodemailer.createTransport({
     service: 'qq',

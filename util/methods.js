@@ -12,6 +12,13 @@ module.exports = {
       resultCode += allCode.charAt(index);
     }
     return resultCode;
+  },
+
+  generateResult: function(status, message) {
+    return {
+      status: status,
+      message: message
+    }
   }
 
 };

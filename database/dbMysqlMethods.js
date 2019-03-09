@@ -15,8 +15,8 @@ var user = {
   // deleteTable: 'DROP TABLE user',
   // login: 'SELECT * FROM user WHERE nickname=? or email=?',
 
-  register:'INSERT INTO user(id, nickname, email, password) VALUES(0,?,?,?)',
-  login: 'SELECT * FROM user WHERE (nickname=? OR email=?) And password=?',
+  sign_up:'INSERT INTO user(id, nickname, email, password) VALUES(0,?,?,?)',
+  login: 'SELECT * FROM user WHERE (email=?) And password=?',
   verifyEmail: 'SELECT * FROM user WHERE email=?'
 
 
