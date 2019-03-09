@@ -110,10 +110,19 @@ router.get("/account_verify_code", (req, res, next) => {
 router.post("/account_sign_up", (req, res, next) => {
   let {nickname, email, password} = req.body;
   let resultData = Methods.generateResult(0, "注册失败");
-  dbMethods.query(dbMySqlMethods.sign_up, [nickname, email, password], function (err, result) {
-    if (result && !err)
-      resultData = Methods.generateResult(1, "注册成功");
-    res.json(resultData);
+
+  dbMethods.query(dbMySqlMethods.verifyEmail, [email], function (err, result) {
+    if (result.length) {
+      let resultData = Methods.generateResult(0, "注册失败，账号已注册。");
+      res.json(resultData);
+      return;
+    }
+
+    dbMethods.query(dbMySqlMethods.sign_up, [nickname, email, password], function (err, result) {
+      if (result && !err)
+        resultData = Methods.generateResult(1, "注册成功");
+      res.json(resultData);
+    });
   });
 });
 
@@ -125,7 +134,6 @@ router.post("/account_sign_up", (req, res, next) => {
 router.post("/account_sign_in", (req, res, next) => {
   let {email, password} = req.body;
   let resultData = Methods.generateResult(0, "登录失败，账号或密码错误。");
-
 
   dbMethods.query(dbMySqlMethods.verifyEmail, [email], function (err, result) {
     if (!result.length) {
