@@ -125,15 +125,31 @@ router.post("/account_sign_up", (req, res, next) => {
 router.post("/account_sign_in", (req, res, next) => {
   let {email, password} = req.body;
   let resultData = Methods.generateResult(0, "登录失败，账号或密码错误。");
-  dbMethods.query(dbMySqlMethods.login, [email, password], function (err, result) {
-    if (result.length) {
-      req.session.userName = req.sessionID;
-      resultData = Methods.generateResult(1, "登录成功");
+
+
+  dbMethods.query(dbMySqlMethods.verifyEmail, [email], function (err, result) {
+    if (!result.length) {
+      let resultData = Methods.generateResult(0, "登录失败，账号未注册。");
+      res.json(resultData);
+      return;
     }
-    res.json(resultData);
+
+    dbMethods.query(dbMySqlMethods.login, [email, password], function (err, result) {
+      if (result.length) {
+        req.session.userName = req.sessionID;
+        resultData = Methods.generateResult(1, "登录成功");
+      }
+      res.json(resultData);
+    });
   });
 });
 
+/**
+ *  功能: 是否登录
+ *  日期：2019-03-09
+ *  文件：api
+ *  參數：
+ */
 router.get("/account_is_login", (req, res) => {
   let resultData = Methods.generateResult(0, "认证失败");
   if (req.session.userName === req.sessionID) {
