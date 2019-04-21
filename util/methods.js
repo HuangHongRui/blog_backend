@@ -14,10 +14,11 @@ module.exports = {
     return resultCode;
   },
 
-  generateResult: function(status, message) {
+  generateResult: function(status, message, data) {
     return {
       status: status,
-      message: message
+      message: message,
+      data: data
     }
   }
 

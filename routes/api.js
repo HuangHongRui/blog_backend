@@ -1,11 +1,14 @@
-let express = require("express");
-let redis = require("redis");
-let dbMethods = require("../database/dbMethods");
-let dbMySqlMethods = require("../database/dbMysqlMethods");
-let sendEmail = require("../util/email");
-let Methods = require("../util/methods");
-let redis_client = redis.createClient();
-let router = express.Router();
+const express = require("express");
+const redis = require("redis");
+const dbMethods = require("../database/dbMethods");
+const dbMySqlMethods = require("../database/dbMysqlMethods");
+const sendEmail = require("../util/email");
+const Methods = require("../util/methods");
+const redis_client = redis.createClient();
+const router = express.Router();
+const service = require("./request");
+const privateConfig = require('../privateConfig');
+
 
 /**
  *  功能: 在线人数
@@ -161,7 +164,8 @@ router.post("/account_sign_in", (req, res, next) => {
 router.get("/account_is_login", (req, res) => {
   let resultData = Methods.generateResult(0, "认证失败");
   if (req.session.userName === req.sessionID) {
-    resultData = Methods.generateResult(1, "认证成功");
+    let data = JSON.parse(req.session.userData);
+    resultData = Methods.generateResult(1, "认证成功", data);
   }
   res.json(resultData);
 });
@@ -170,6 +174,28 @@ router.get("/forget", (req, res, next) => {
   dbMethods.query(dbMySqlMethods.createTable, undefined, function (err, result) {
     console.log("查询结果：", result);
   });
+});
+
+/**
+ *  功能: 第三方登录（GITHUB）
+ *  日期: 2019-04-20
+ *  @params：code
+ */
+router.get("/social_login", (req, res) => {
+  const {code} = req.query;
+  if (code) {
+    const config = Object.assign(privateConfig.github, {code: code});
+    service.gitOauth(config, function(err, token) {
+      if (err) return next(err);
+      service.gitUserInfo(token.access_token, function(err, userinfo) {
+        if (err) return next(err);
+        req.session.userName = req.sessionID;
+        req.session.userData = userinfo;
+        res.redirect(301, 'http://local.sunnyman.club:8000');
+      })
+    })
+  }
+
 });
 
 module.exports = router;
