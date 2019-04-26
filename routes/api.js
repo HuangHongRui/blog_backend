@@ -158,13 +158,12 @@ router.post("/account_sign_in", (req, res, next) => {
 /**
  *  功能: 是否登录
  *  日期：2019-03-09
- *  文件：api
- *  參數：
  */
 router.get("/account_is_login", (req, res) => {
+  const {userName, userData} = req.session;
   let resultData = Methods.generateResult(0, "认证失败");
-  if (req.session.userName === req.sessionID) {
-    let data = JSON.parse(req.session.userData);
+  if (userName === req.sessionID) {
+    let data = userData && JSON.parse(userData) || {};
     resultData = Methods.generateResult(1, "认证成功", data);
   }
   res.json(resultData);
@@ -191,6 +190,7 @@ router.get("/social_login", (req, res) => {
         if (err) return next(err);
         req.session.userName = req.sessionID;
         req.session.userData = userinfo;
+        req.session.token = token.access_token;
         res.redirect(301, 'http://local.sunnyman.club:8000');
       })
     })

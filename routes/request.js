@@ -37,6 +37,7 @@ function test(fn) {
  *  Intro: 获取GITHUB登录权限
  *  @params：{OBJECT} config
  *  @params：{FUNCTION} fn
+ *  APILink: https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/
  */
 function gitOauth(config, fn) {
 
@@ -56,16 +57,18 @@ function gitOauth(config, fn) {
  */
 
 function gitUserInfo(token, fn) {
+
   request.get({
     url: "https://api.github.com/user",
     qs: {access_token: token},
     headers: {
       "Accept": "application/json",
-      "User-Agent": 'blog'
+      "User-Agent": "blog"
     }
-  }, function(err, res, body) {
-    return fn(err, body)
-  })
+  }, function (err, res, body) {
+    return fn(err, body);
+  });
+
 }
 
 module.exports = {
