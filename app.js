@@ -9,6 +9,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var apiRouter = require('./routes/api');
 const privateConfig = require('./privateConfig');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const db = redis.createClient();
@@ -31,6 +32,7 @@ app.use(function (req, res, next) {
 });
 
 // view engine setup
+app.use(cookieParser());
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(logger('dev'));

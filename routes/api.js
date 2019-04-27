@@ -181,6 +181,8 @@ router.get("/forget", (req, res, next) => {
  *  @params：code
  */
 router.get("/social_login", (req, res) => {
+
+  let resultData = Methods.generateResult(0, "登录失败");
   const {code} = req.query;
   if (code) {
     const config = Object.assign(privateConfig.github, {code: code});
@@ -191,10 +193,25 @@ router.get("/social_login", (req, res) => {
         req.session.userName = req.sessionID;
         req.session.userData = userinfo;
         req.session.token = token.access_token;
-        res.redirect(301, 'http://local.sunnyman.club:8000');
+        res.redirect(301, 'http://www.sunnyman.club');
       })
     })
+  } else {
+    res.json(resultData)
   }
+
+});
+
+/**
+ *  功能: 退出登录
+ *  日期: 2019-04-27
+ */
+router.get("/account_logout", (req, res) => {
+
+  let resultData = Methods.generateResult(1, "已登出.");
+  res.clearCookie("sid", {domain: 'sunnyman.club'});
+  req.session.userName = null;
+  res.json(resultData);
 
 });
 
