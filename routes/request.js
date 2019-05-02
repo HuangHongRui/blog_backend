@@ -55,7 +55,6 @@ function gitOauth(config, fn) {
  *  Intro: 获取GITHUB用户基本信息
  *  @params：{String}  token
  */
-
 function gitUserInfo(token, fn) {
 
   request.get({
@@ -71,8 +70,29 @@ function gitUserInfo(token, fn) {
 
 }
 
+/**
+ *  功能: 获取ISSUES
+ *  @params：{String}  token
+ */
+function getIssues(fn) {
+
+  request.get({
+    url: "https://api.github.com/repos/HuangHongRui/Leos/issues",
+    headers: {
+      "Accept": "application/json",
+      "User-Agent": "blog"
+    }
+  }, function (err, res, body) {
+    console.log( err );
+    
+    return fn(err, body);
+  });
+
+}
+
 module.exports = {
   test: test,
   gitOauth: gitOauth,
-  gitUserInfo: gitUserInfo
+  gitUserInfo: gitUserInfo,
+  getIssues: getIssues
 };

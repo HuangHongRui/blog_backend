@@ -176,6 +176,19 @@ router.get("/forget", (req, res, next) => {
 });
 
 /**
+ *  功能: 退出登录
+ *  日期: 2019-04-27
+ */
+router.get("/account_logout", (req, res) => {
+
+  let resultData = Methods.generateResult(1, "已登出.");
+  res.clearCookie("sid", {domain: 'sunnyman.club'});
+  req.session.userName = null;
+  res.json(resultData);
+
+});
+
+/**
  *  功能: 第三方登录（GITHUB）
  *  日期: 2019-04-20
  *  @params：code
@@ -203,15 +216,25 @@ router.get("/social_login", (req, res) => {
 });
 
 /**
- *  功能: 退出登录
- *  日期: 2019-04-27
+ *  功能: 获取iSSUES
+ *  日期: 2019-05-03
  */
-router.get("/account_logout", (req, res) => {
+router.get("/get_issues", (req, res) => {
 
-  let resultData = Methods.generateResult(1, "已登出.");
-  res.clearCookie("sid", {domain: 'sunnyman.club'});
-  req.session.userName = null;
-  res.json(resultData);
+  service.getIssues(function(err, issues) {
+    if (err) return next(err);
+    let data = JSON.parse(issues) || {};
+    Object.keys(data).length && (data = data.map((data, idx) => ({
+      id: data.id,
+      title: data.title,
+      labels: data.labels,
+      intro: data.body.match(/\*\*(.+)\*\*\r\n---/)[1],
+      body: data.body.match(/\*.+\r\n---\r\n\r\n([\s\S]*)/)[1],
+      date: data.created_at.match(/^\d+[-]\d.[-]\d./g)[0]
+    })))
+    resultData = Methods.generateResult(1, "成功", data);
+    res.json(resultData)
+  })
 
 });
 
