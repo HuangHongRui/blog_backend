@@ -1,35 +1,39 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var logger = require('morgan');
-var stylus = require('stylus');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const logger = require('morgan');
+const stylus = require('stylus');
 const redis = require('redis');
 const session = require('express-session');
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var apiRouter = require('./routes/api');
-const privateConfig = require('./privateConfig');
 const cookieParser = require('cookie-parser');
-
+const schedule = require('node-schedule');
+const privateConfig = require('./privateConfig');
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const apiRouter = require('./routes/api');
+const autoReq = require('./util/auto')
 const app = express();
-const db = redis.createClient();
+const redis_client = redis.createClient();
 
 app.use(session(privateConfig.elseConfig.session));
 
 app.use(function (req, res, next) {
   var ua = req.headers['user-agent'];
-  db.zadd('online', Date.now(), ua, next);
+  redis_client.zadd('online', Date.now(), ua, next);
 });
 
 app.use(function (req, res, next) {
   var min = 60 * 1000;
   var ago = Date.now() - min;
-  db.zrevrangebyscore('online', '+inf', ago, function (err, users) {
+  redis_client.zrevrangebyscore('online', '+inf', ago, function (err, users) {
     if (err) return next(err);
     req.online = users;
     next();
   });
 });
+
+//  整点执行一次
+schedule.scheduleJob('0 0 * * * *', autoReq.getIssues);
 
 // view engine setup
 app.use(cookieParser());

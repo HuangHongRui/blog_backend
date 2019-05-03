@@ -83,8 +83,6 @@ function getIssues(fn) {
       "User-Agent": "blog"
     }
   }, function (err, res, body) {
-    console.log( err );
-    
     return fn(err, body);
   });
 

@@ -9,11 +9,13 @@ const router = express.Router();
 const service = require("./request");
 const privateConfig = require('../privateConfig');
 
+router.get("/test", (req, res, next) => {});
 
 /**
  *  功能: 在线人数
  */
 router.get("/online", function (req, res, next) {
+
   res.status(200);
   res.type("application/json");
   res.json({
@@ -21,12 +23,14 @@ router.get("/online", function (req, res, next) {
     message: "当前在线人数",
     online: `${req.online.length}`
   });
+
 });
 
 /**
  *  功能: 运行历史时间
  */
 router.get("/runtime", (req, res, next) => {
+
   res.status(200);
   res.type("application/json");
   res.json({
@@ -35,24 +39,7 @@ router.get("/runtime", (req, res, next) => {
     unit: "毫秒",
     runtime: Date.parse(new Date()) - Date.parse(new Date("2018-05-01T09:06:07"))
   });
-});
-
-router.get("/test", (req, res, next) => {
-  redis_client.set("redis-leo", "123", "EX", 5, "NX", (err, res) => {
-  });
-  res.json({});
-});
-
-router.get("/get", (req, res, next) => {
-  redis_client.get("hhr464362353@gmail.com_redis", function (err, res) {
-  });
-  res.json({});
-});
-
-router.get("/del", (req, res, next) => {
-  redis_client.del("hhr464362353@gmail.com_redis", function (err, res) {
-  });
-  res.json({});
+  
 });
 
 /**
@@ -61,6 +48,7 @@ router.get("/del", (req, res, next) => {
  *  简介: 用于注册时/找密时的验证
  */
 router.get("/account_verify_email", (req, res, next) => {
+
   let {email} = req.query;
   let resultData = Methods.generateResult(0, "邮箱未注册");
   dbMethods.query(dbMySqlMethods.verifyEmail, [email], function (err, result) {
@@ -68,12 +56,14 @@ router.get("/account_verify_email", (req, res, next) => {
       resultData = Methods.generateResult(1, "邮箱已注册");
     res.json(resultData);
   });
+
 });
 
 /**
  *  功能: 发送邮件_注册验证码
  **/
 router.get("/account_send_email", (req, res, next) => {
+
   let {email} = req.query;
   let resultData = Methods.generateResult(0, "验证码有效期5分钟，请5分钟后再试");
   redis_client.get(email + "_redis", (err, reply) => {
@@ -88,6 +78,7 @@ router.get("/account_send_email", (req, res, next) => {
       });
     }
   });
+
 });
 
 /**
@@ -95,6 +86,7 @@ router.get("/account_send_email", (req, res, next) => {
  *  参数: vCode
  **/
 router.get("/account_verify_code", (req, res, next) => {
+
   let {email, vCode} = req.query;
   let resultData = Methods.generateResult(0, "验证码错误");
   redis_client.get(email + "_redis", function (err, reply) {
@@ -102,6 +94,7 @@ router.get("/account_verify_code", (req, res, next) => {
       resultData = Methods.generateResult(1, "验证成功");
     res.json(resultData);
   });
+
 });
 
 /**
@@ -111,22 +104,22 @@ router.get("/account_verify_code", (req, res, next) => {
  *  参数: password
  **/
 router.post("/account_sign_up", (req, res, next) => {
+
   let {nickname, email, password} = req.body;
   let resultData = Methods.generateResult(0, "注册失败");
-
   dbMethods.query(dbMySqlMethods.verifyEmail, [email], function (err, result) {
     if (result.length) {
       let resultData = Methods.generateResult(0, "注册失败，账号已注册。");
       res.json(resultData);
       return;
     }
-
     dbMethods.query(dbMySqlMethods.sign_up, [nickname, email, password], function (err, result) {
       if (result && !err)
         resultData = Methods.generateResult(1, "注册成功");
       res.json(resultData);
     });
   });
+
 });
 
 /**
@@ -135,16 +128,15 @@ router.post("/account_sign_up", (req, res, next) => {
  *  参数: password
  **/
 router.post("/account_sign_in", (req, res, next) => {
+
   let {email, password} = req.body;
   let resultData = Methods.generateResult(0, "登录失败，账号或密码错误。");
-
   dbMethods.query(dbMySqlMethods.verifyEmail, [email], function (err, result) {
     if (!result.length) {
       let resultData = Methods.generateResult(0, "登录失败，账号未注册。");
       res.json(resultData);
       return;
     }
-
     dbMethods.query(dbMySqlMethods.login, [email, password], function (err, result) {
       if (result.length) {
         req.session.userName = req.sessionID;
@@ -153,6 +145,7 @@ router.post("/account_sign_in", (req, res, next) => {
       res.json(resultData);
     });
   });
+
 });
 
 /**
@@ -160,6 +153,7 @@ router.post("/account_sign_in", (req, res, next) => {
  *  日期：2019-03-09
  */
 router.get("/account_is_login", (req, res) => {
+
   const {userName, userData} = req.session;
   let resultData = Methods.generateResult(0, "认证失败");
   if (userName === req.sessionID) {
@@ -167,12 +161,20 @@ router.get("/account_is_login", (req, res) => {
     resultData = Methods.generateResult(1, "认证成功", data);
   }
   res.json(resultData);
+
 });
 
+
+/**
+ *  功能: 更改密码(暂无)
+ *  日期: 2019-04-27
+ */
 router.get("/forget", (req, res, next) => {
+
   dbMethods.query(dbMySqlMethods.createTable, undefined, function (err, result) {
     console.log("查询结果：", result);
   });
+
 });
 
 /**
@@ -221,20 +223,10 @@ router.get("/social_login", (req, res) => {
  */
 router.get("/get_issues", (req, res) => {
 
-  service.getIssues(function(err, issues) {
-    if (err) return next(err);
-    let data = JSON.parse(issues) || {};
-    Object.keys(data).length && (data = data.map((data, idx) => ({
-      id: data.id,
-      title: data.title,
-      labels: data.labels,
-      intro: data.body.match(/\*\*(.+)\*\*\r\n---/)[1],
-      body: data.body.match(/\*.+\r\n---\r\n\r\n([\s\S]*)/)[1],
-      date: data.created_at.match(/^\d+[-]\d.[-]\d./g)[0]
-    })))
-    resultData = Methods.generateResult(1, "成功", data);
-    res.json(resultData)
-  })
+  redis_client.get("issues", (err, redis_res) => {
+    if (err) return next(err)
+    res.json(JSON.parse(redis_res));
+  });
 
 });
 
