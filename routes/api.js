@@ -9,7 +9,9 @@ const router = express.Router();
 const service = require("./request");
 const privateConfig = require('../privateConfig');
 
-router.get("/test", (req, res, next) => {});
+router.get("/test", (req, res, next) => {
+  redis_client.del('issues', redis.print)
+});
 
 /**
  *  功能: 在线人数
@@ -225,7 +227,9 @@ router.get("/get_issues", (req, res) => {
 
   redis_client.get("issues", (err, redis_res) => {
     if (err) return next(err)
-    res.json(JSON.parse(redis_res));
+    let data = redis_res ? JSON.parse(redis_res) : [];
+    const resultData = Methods.generateResult(1, "认证成功", data);
+    res.json(resultData);
   });
 
 });
