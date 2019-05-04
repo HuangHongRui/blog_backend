@@ -188,6 +188,7 @@ router.get("/account_logout", (req, res) => {
   let resultData = Methods.generateResult(1, "已登出.");
   res.clearCookie("sid", {domain: 'sunnyman.club'});
   req.session.userName = null;
+  req.session.userData = null;
   res.json(resultData);
 
 });
