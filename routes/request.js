@@ -77,7 +77,7 @@ function gitUserInfo(token, fn) {
 function getIssues(fn) {
 
   request.get({
-    url: "https://api.github.com/repos/HuangHongRui/Leos/issues",
+    url: "https://api.github.com/repos/HuangHongRui/Blog/issues",
     headers: {
       "Accept": "application/json",
       "User-Agent": "blog"
