@@ -32,8 +32,7 @@ app.use(function (req, res, next) {
   });
 });
 
-//  整点执行一次
-schedule.scheduleJob('0/5 * * * *', autoReq.getIssues);
+schedule.scheduleJob('*/5 * * * *', autoReq.getIssues);
 
 // view engine setup
 app.use(cookieParser());
