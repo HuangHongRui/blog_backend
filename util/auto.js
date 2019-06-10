@@ -13,21 +13,20 @@ module.exports = {
     service.getIssues(function (err, issues) {
       if (err) return next(err);
       let data = JSON.parse(issues) || {};
-      Object.keys(data).length && (data = data.map((data, idx) => {
+      let resData = [];
+      Object.keys(data).length && (data.forEach(data => {
         if (data.labels && data.labels.find(item => (item.name === 'Blog'))) {
-            return {
-              id: data.id,
-              title: data.title,
-              labels: data.labels,
-              intro: data.body.match(/\*\*(.+)\*\*\r\n---/)[1],
-              body: data.body.match(/\*.+\r\n---\r\n\r\n([\s\S]*)/)[1],
-              date: data.created_at.match(/^\d+[-]\d.[-]\d./g)[0]
-            }
-          }
+          resData.push({
+            id: data.id,
+            title: data.title,
+            labels: data.labels,
+            intro: data.body.match(/\*\*(.+)\*\*\r\n---/)[1],
+            body: data.body.match(/\*.+\r\n---\r\n\r\n([\s\S]*)/)[1],
+            date: data.created_at.match(/^\d+[-]\d.[-]\d./g)[0]
+          })
+        }
       }))
-      redis_client.set("issues", JSON.stringify(data), redis.print)
+      redis_client.set("issues", JSON.stringify(resData), redis.print)
     })
-
   }
-
 }
